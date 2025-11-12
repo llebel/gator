@@ -1,13 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
 	"github.com/llebel/gator/internal/config"
+	"github.com/llebel/gator/internal/database"
+
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *config.Config
 }
 
@@ -17,9 +22,21 @@ func main() {
 		cfg: &cfg,
 	}
 
+	// Register commands
 	commands := commands{commandMap: make(map[string]func(*state, command) error)}
 	commands.register("login", handlerLogin)
+	commands.register("register", handlerRegister)
 
+	// Register database
+	db, err := sql.Open("postgres", s.cfg.DbURL)
+	if err != nil {
+		fmt.Printf("Error opening database: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+	s.db = database.New(db)
+
+	// Parse command line
 	args := os.Args
 	if len(args) < 2 {
 		fmt.Println("Usage: gator <command> [args...]")
@@ -29,7 +46,7 @@ func main() {
 	cmdArgs := args[2:]
 	cmd := command{Name: cmdName, Args: cmdArgs}
 
-	err := commands.run(&s, cmd)
+	err = commands.run(&s, cmd)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
