@@ -29,8 +29,8 @@ func handlerRegister(s *state, cmd command) error {
 	newUser, err := s.db.CreateUser(context.Background(), database.CreateUserParams{
 		Name:      username,
 		ID:        uuid.New(),
-		CreatedAt: sql.NullTime{Time: time.Now()},
-		UpdatedAt: sql.NullTime{Time: time.Now()},
+		CreatedAt: sql.NullTime{Time: time.Now(), Valid: true},
+		UpdatedAt: sql.NullTime{Time: time.Now(), Valid: true},
 	})
 	if err != nil {
 		return fmt.Errorf("error creating user: %v", err)
