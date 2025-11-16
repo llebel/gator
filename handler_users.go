@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 )
 
 func handlerUsers(s *state, cmd command) error {
@@ -14,9 +13,9 @@ func handlerUsers(s *state, cmd command) error {
 
 	users, err := s.db.GetUsers(context.Background())
 	if err != nil {
-		fmt.Printf("error retrieving users: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving users: %v", err)
 	}
+
 	fmt.Println("Registered users:")
 	for _, user := range users {
 		if user.Name == s.cfg.CurrentUserName {

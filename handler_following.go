@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 )
 
 func handlerFollowing(s *state, cmd command) error {
@@ -14,9 +13,9 @@ func handlerFollowing(s *state, cmd command) error {
 
 	feeds, err := s.db.GetFeedFollowsForUser(context.Background(), s.cfg.CurrentUserName)
 	if err != nil {
-		fmt.Printf("error retrieving following feeds: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving following feeds: %v", err)
 	}
+
 	fmt.Println("Following feeds:")
 	for _, feed := range feeds {
 		fmt.Printf("* %s\n", feed.FeedName)

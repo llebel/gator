@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 )
 
 func handlerFeeds(s *state, cmd command) error {
@@ -14,9 +13,9 @@ func handlerFeeds(s *state, cmd command) error {
 
 	feeds, err := s.db.GetFeeds(context.Background())
 	if err != nil {
-		fmt.Printf("error retrieving feeds: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving feeds: %v", err)
 	}
+
 	fmt.Println("Registered feeds:")
 	for _, feed := range feeds {
 		// Getting user name for the feed

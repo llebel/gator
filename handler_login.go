@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/llebel/gator/internal/config"
 )
@@ -17,8 +16,7 @@ func handlerLogin(s *state, cmd command) error {
 	// Check if user actually exists
 	_, err := s.db.GetUser(context.Background(), username)
 	if err != nil {
-		fmt.Printf("user '%s' does not exist\n", username)
-		os.Exit(1)
+		return fmt.Errorf("user '%s' does not exist", username)
 	}
 
 	config.SetUser(username)

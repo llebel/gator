@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/llebel/gator/internal/database"
@@ -19,13 +18,13 @@ func handlerFollow(s *state, cmd command) error {
 	username := s.cfg.CurrentUserName
 	user, err := s.db.GetUser(context.Background(), username)
 	if err != nil {
-		fmt.Printf("error retrieving current user '%s': %v\n", username, err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving current user '%s': %v", username, err)
 	}
+
+	// Getting feed by URL
 	feed, err := s.db.GetFeedByURL(context.Background(), url)
 	if err != nil {
-		fmt.Printf("error retrieving feed by url '%s': %v\n", url, err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving feed by url '%s': %v", url, err)
 	}
 
 	// Follwowing the feed

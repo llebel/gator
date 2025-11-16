@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,8 +21,7 @@ func handlerAddfeed(s *state, cmd command) error {
 	username := s.cfg.CurrentUserName
 	user, err := s.db.GetUser(context.Background(), username)
 	if err != nil {
-		fmt.Printf("error retrieving current user '%s': %v\n", username, err)
-		os.Exit(1)
+		return fmt.Errorf("error retrieving current user '%s': %v", username, err)
 	}
 
 	// Creating a new feed

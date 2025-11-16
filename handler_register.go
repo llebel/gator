@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,8 +20,7 @@ func handlerRegister(s *state, cmd command) error {
 	// Check if user already exists
 	_, err := s.db.GetUser(context.Background(), username)
 	if err == nil {
-		fmt.Printf("user '%s' already exists\n", username)
-		os.Exit(1)
+		return fmt.Errorf("user '%s' already exists", username)
 	}
 
 	// Creating a new user
