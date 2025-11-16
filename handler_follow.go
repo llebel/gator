@@ -8,18 +8,11 @@ import (
 	"github.com/llebel/gator/internal/database"
 )
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 1 {
 		return fmt.Errorf("follow command requires exactly one argument: url")
 	}
 	url := cmd.Args[0]
-
-	// Getting current user
-	username := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("error retrieving current user '%s': %v", username, err)
-	}
 
 	// Getting feed by URL
 	feed, err := s.db.GetFeedByURL(context.Background(), url)

@@ -10,19 +10,12 @@ import (
 	"github.com/llebel/gator/internal/database"
 )
 
-func handlerAddfeed(s *state, cmd command) error {
+func handlerAddfeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) != 2 {
 		return fmt.Errorf("addfeed command requires exactly two arguments: feed_name and feed_url")
 	}
 	feedName := cmd.Args[0]
 	feedURL := cmd.Args[1]
-
-	// Getting current user
-	username := s.cfg.CurrentUserName
-	user, err := s.db.GetUser(context.Background(), username)
-	if err != nil {
-		return fmt.Errorf("error retrieving current user '%s': %v", username, err)
-	}
 
 	// Creating a new feed
 	newFeed, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
