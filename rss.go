@@ -2,10 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
+	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/llebel/gator/internal/database"
 )
 
 type RSSFeed struct {
@@ -65,4 +71,38 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 	unescapeHTML(&rss)
 
 	return &rss, nil
+}
+
+func scrapeFeeds(s *state) error {
+	nextFeed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return err
+	}
+
+	// No feed to scrape
+	if nextFeed.ID == uuid.Nil {
+		return nil
+	}
+
+	// Mark feed as fetched
+	err = s.db.MarkFeedFetchedbyID(context.Background(), database.MarkFeedFetchedbyIDParams{
+		ID:            nextFeed.ID,
+		LastFetchedAt: sql.NullTime{Time: time.Now(), Valid: true},
+	})
+	if err != nil {
+		return err
+	}
+
+	// Scrape the feed
+	rssFeed, err := fetchFeed(context.Background(), nextFeed.Url)
+	if err != nil {
+		return err
+	}
+
+	// Process each item in the feed
+	for _, item := range rssFeed.Channel.Item {
+		fmt.Printf("* %s\n", item.Title)
+	}
+
+	return nil
 }
