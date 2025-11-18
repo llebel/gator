@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/llebel/gator/internal/database"
 )
 
@@ -94,6 +95,7 @@ func scrapeFeeds(s *state) error {
 	}
 
 	// Scrape the feed
+	fmt.Printf("Scraping feed: %s (%s)\n", nextFeed.Name, nextFeed.Url)
 	rssFeed, err := fetchFeed(context.Background(), nextFeed.Url)
 	if err != nil {
 		return err
@@ -101,7 +103,40 @@ func scrapeFeeds(s *state) error {
 
 	// Process each item in the feed
 	for _, item := range rssFeed.Channel.Item {
-		fmt.Printf("* %s\n", item.Title)
+		// Parse publication date
+		var pubDate sql.NullTime
+		if item.PubDate != "" {
+			parsedTime, err := time.Parse(time.RFC1123Z, item.PubDate)
+			if err != nil {
+				parsedTime, err = time.Parse(time.RFC1123, item.PubDate)
+				if err != nil {
+					pubDate = sql.NullTime{Valid: false}
+				} else {
+					pubDate = sql.NullTime{Time: parsedTime, Valid: true}
+				}
+			} else {
+				pubDate = sql.NullTime{Time: parsedTime, Valid: true}
+			}
+		} else {
+			pubDate = sql.NullTime{Valid: false}
+		}
+
+		// Create post in the database
+		fmt.Printf("Saving post %s (%s)\n", item.Title, item.Link)
+		_, err := s.db.CreatePost(context.Background(), database.CreatePostParams{
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: sql.NullString{String: item.Description, Valid: item.Description != ""},
+			PublishedAt: pubDate,
+			FeedID:      uuid.NullUUID{UUID: nextFeed.ID, Valid: true},
+		})
+		if err != nil {
+			// Ignore unique constraint violation errors
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505" {
+				continue
+			}
+			return err
+		}
 	}
 
 	return nil
